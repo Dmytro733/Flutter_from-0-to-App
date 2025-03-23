@@ -35,18 +35,82 @@ class MyAppState extends ChangeNotifier {
 
   var favorites = <WordPair>[];
 
-  void toggleFavorite() {
-    if (favorites.contains(current)) {
-      favorites.remove(current);
+  void toggleFavorite(pair) {
+    if(current == false) current = pair;
+
+    if (favorites.contains(pair)) {
+      favorites.remove(pair);
     } else {
-      favorites.add(current);
+      favorites.add(pair);
     }
     notifyListeners();
     print(favorites);
   }
 }
 
-class MyHomePage extends StatelessWidget {
+class MyHomePage extends StatefulWidget {
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  var selectedIndex = 0; 
+
+  @override
+  Widget build(BuildContext context) {
+    Widget page;
+
+    switch (selectedIndex) {
+      case 0:
+        page = GeneratorPage();
+        break;
+      case 1:
+        page = FavoritesPage();
+        break;
+      default:
+        throw Placeholder();
+    }
+
+
+    return LayoutBuilder(builder: (context, constraints) {
+      return Scaffold(
+        body: Row(
+          children: [
+            SafeArea(
+              child: NavigationRail(
+                extended: constraints.maxWidth >= 600,
+                destinations: [
+                  NavigationRailDestination(
+                    icon: Icon(Icons.home),
+                    label: Text('Home'),
+                  ),
+                  NavigationRailDestination(
+                    icon: Icon(Icons.favorite),
+                    label: Text('Favorites'),
+                  )
+                ],
+                selectedIndex: selectedIndex,
+                onDestinationSelected: (value) => {
+                  setState(() {
+                    selectedIndex = value;
+                  })
+                },
+              )
+            ),
+            Expanded(
+              child: Container(
+                color: Theme.of(context).colorScheme.tertiaryContainer,
+                child: page,
+              ) 
+            )
+          ],
+        ),
+      );
+    });
+  }
+}
+
+class GeneratorPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
@@ -92,6 +156,30 @@ class MyHomePage extends StatelessWidget {
       ),
     );
   }
+}
+
+class FavoritesPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+    var favorites = appState.favorites;
+    
+    return Column(
+      children: [
+        if (favorites.isEmpty)
+          Text('No favorites yet.'),
+        for (var pair in favorites)
+          ListTile(
+            leading: IconButton(
+              icon: Icon(Icons.restore_from_trash_sharp),
+              onPressed: () {
+                appState.toggleFavorite();
+              },
+            ),
+            title: Text(pair.asLowerCase),
+          ),
+      ],
+    );  
 }
 
 class BigCard extends StatelessWidget {
