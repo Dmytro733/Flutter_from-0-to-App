@@ -33,18 +33,19 @@ class MyAppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setCurrentFavorite(favorite) {
+    current = favorite;
+  }
+
   var favorites = <WordPair>[];
 
-  void toggleFavorite(pair) {
-    if(current == false) current = pair;
-
-    if (favorites.contains(pair)) {
-      favorites.remove(pair);
+  void toggleFavorite() {
+    if (favorites.contains(current)) {
+      favorites.remove(current);
     } else {
-      favorites.add(pair);
+      favorites.add(current);
     }
     notifyListeners();
-    print(favorites);
   }
 }
 
@@ -141,7 +142,6 @@ class GeneratorPage extends StatelessWidget {
                   },
                   label: Text(buttonText),
                   icon: Icon(icon),
-                  // child: Text('Like'),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -163,23 +163,36 @@ class FavoritesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     var favorites = appState.favorites;
-    
-    return Column(
-      children: [
-        if (favorites.isEmpty)
-          Text('No favorites yet.'),
-        for (var pair in favorites)
-          ListTile(
-            leading: IconButton(
-              icon: Icon(Icons.restore_from_trash_sharp),
-              onPressed: () {
-                appState.toggleFavorite();
-              },
-            ),
-            title: Text(pair.asLowerCase),
+    Widget favoritesContent;
+
+    if(favorites.isNotEmpty) {
+      favoritesContent = Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        children: [
+          for (var pair in favorites)
+          ElevatedButton.icon(
+            onPressed: () {
+              appState.setCurrentFavorite(pair);
+              appState.toggleFavorite();
+            },
+            label: Text(pair.asLowerCase),
+            icon: Icon(Icons.restore_from_trash_sharp)
           ),
-      ],
-    );  
+        ],
+      );
+    }else{
+      favoritesContent = Column(
+        children: [
+          Text('No favorites yet.')
+        ],
+      );
+    }
+    
+    return Center(
+      child: favoritesContent
+    );
+  }
 }
 
 class BigCard extends StatelessWidget {
